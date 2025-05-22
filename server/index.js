@@ -9,6 +9,9 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Import auth routes
+const authRoutes = require('./routes/auth');
+
 // Test route
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Server is running!', timestamp: new Date() });
@@ -19,7 +22,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', service: 'Spotify Playlist Analyzer API' });
 });
 
-app.listen(PORT, () => {
+// Use auth routes
+app.use('/auth', authRoutes);
+
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📡 API available at http://localhost:${PORT}/api`);
+  console.log(`📡 API available at http://127.0.0.1:${PORT}/api`);
+  console.log(`🎵 Spotify auth available at http://127.0.0.1:${PORT}/auth/login`);
 });
