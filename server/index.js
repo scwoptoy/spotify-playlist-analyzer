@@ -11,6 +11,7 @@ app.use(express.json());
 
 // Import auth routes
 const authRoutes = require('./routes/auth');
+const spotifyRoutes = require('./routes/spotify');
 
 // Test route
 app.get('/api/test', (req, res) => {
@@ -24,6 +25,7 @@ app.get('/health', (req, res) => {
 
 // Use auth routes
 app.use('/auth', authRoutes);
+app.use('/api/spotify', spotifyRoutes);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);

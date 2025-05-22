@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SpotifyLogin from './components/SpotifyLogin';
 import SpotifyCallback from './components/SpotifyCallback';
+import PlaylistList from './components/PlaylistList';
 import './App.css';
 
 function Dashboard() {
@@ -10,19 +11,7 @@ function Dashboard() {
     return <Navigate to="/" />;
   }
 
-  return (
-    <div style={{ padding: '20px' }}>
-      <h1>Dashboard</h1>
-      <p>Welcome! You're connected to Spotify.</p>
-      <p>Access Token: {accessToken.substring(0, 20)}...</p>
-      <button onClick={() => {
-        localStorage.clear();
-        window.location.href = '/';
-      }}>
-        Logout
-      </button>
-    </div>
-  );
+  return <PlaylistList />;
 }
 
 function App() {
