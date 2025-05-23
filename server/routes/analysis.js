@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const { analyzeBigFivePersonality } = require('./psychology');
 const router = express.Router();
 
 // Analyze a specific playlist
@@ -43,25 +44,33 @@ router.get('/playlist/:playlistId', async (req, res) => {
 
     console.log(`📊 Found ${allTracks.length} valid tracks`);
 
-    // Step 3: Try to get audio features (with fallback)
+    // Step 3: Try to get audio features (with improved error handling)
     let audioFeatures = [];
     let hasAudioFeatures = false;
     
     if (allTracks.length > 0) {
       try {
-        const trackIds = allTracks.map(track => track.id);
+        // Filter out invalid track IDs (must be 22 characters, alphanumeric)
+        const validTrackIds = allTracks
+          .map(track => track.id)
+          .filter(id => id && id.length === 22 && /^[a-zA-Z0-9]+$/.test(id));
         
-        // Try to get audio features in batches
-        for (let i = 0; i < trackIds.length; i += 100) {
-          const batch = trackIds.slice(i, i + 100);
-          try {
-            const featuresResponse = await axios.get('https://api.spotify.com/v1/audio-features', {
-              headers: { 'Authorization': `Bearer ${accessToken}` },
-              params: { ids: batch.join(',') }
-            });
-            audioFeatures.push(...featuresResponse.data.audio_features.filter(Boolean));
-          } catch (batchError) {
-            console.log(`⚠️ Skipping batch ${Math.floor(i/100) + 1} due to permissions`);
+        console.log(`🔍 Valid track IDs: ${validTrackIds.length}/${allTracks.length}`);
+        
+        if (validTrackIds.length > 0) {
+          // Try to get audio features in batches
+          for (let i = 0; i < validTrackIds.length; i += 100) {
+            const batch = validTrackIds.slice(i, i + 100);
+            try {
+              console.log(`🎵 Processing audio features batch: ${batch.length} tracks`);
+              const featuresResponse = await axios.get('https://api.spotify.com/v1/audio-features', {
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+                params: { ids: batch.join(',') }
+              });
+              audioFeatures.push(...featuresResponse.data.audio_features.filter(Boolean));
+            } catch (batchError) {
+              console.log(`⚠️ Skipping batch ${Math.floor(i/100) + 1} due to permissions:`, batchError.response?.status);
+            }
           }
         }
         
@@ -74,12 +83,14 @@ router.get('/playlist/:playlistId', async (req, res) => {
     }
 
     // Step 4: Analyze with available data
+    console.log(`🔬 Starting comprehensive analysis...`);
     const analysis = analyzePlaylistData(allTracks, playlist, audioFeatures, hasAudioFeatures);
 
+    console.log(`✅ Analysis complete for "${playlist.name}"`);
     res.json(analysis);
 
   } catch (error) {
-    console.error('Error analyzing playlist:', error.response?.data || error.message);
+    console.error('❌ Error analyzing playlist:', error.response?.data || error.message);
     
     if (error.response?.status === 401) {
       return res.status(401).json({ error: 'Access token expired or invalid' });
@@ -104,6 +115,8 @@ function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudioFeatu
       error: 'No tracks available for analysis'
     };
   }
+
+  console.log(`📊 Starting comprehensive analysis for ${tracks.length} tracks`);
 
   // Calculate basic stats
   const totalDuration = tracks.reduce((sum, track) => sum + track.duration_ms, 0);
@@ -131,11 +144,18 @@ function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudioFeatu
     }
   });
 
+  // Calculate average popularity
+  const avgPopularity = popularityValues.length > 0 
+    ? popularityValues.reduce((a, b) => a + b, 0) / popularityValues.length 
+    : 0;
+
   // Generate analysis based on available data
   let audioAnalysis = null;
   let tasteProfile = null;
 
   if (hasAudioFeatures && audioFeatures.length > 0) {
+    console.log(`🎼 Generating analysis with ${audioFeatures.length} audio features`);
+    
     // Full analysis with audio features
     const features = ['energy', 'valence', 'danceability', 'acousticness', 'instrumentalness', 'speechiness', 'tempo', 'loudness'];
     
@@ -152,6 +172,7 @@ function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudioFeatu
 
     tasteProfile = generateTasteDescription(averages);
   } else {
+    console.log(`📝 Generating analysis without audio features`);
     // Alternative analysis without audio features
     tasteProfile = generateAlternativeTasteProfile(tracks, popularityValues, decades, explicit);
   }
@@ -162,10 +183,22 @@ function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudioFeatu
     .slice(0, 10)
     .map(([name, count]) => ({ name, count }));
 
-  // Popularity analysis
-  const avgPopularity = popularityValues.length > 0 
-    ? popularityValues.reduce((a, b) => a + b, 0) / popularityValues.length 
-    : 0;
+  console.log(`🎤 Top artists identified: ${topArtists.length}`);
+
+  // Generate psychological profiling
+  console.log(`🧠 Starting psychological analysis...`);
+  const psychologyProfile = analyzeBigFivePersonality(tracks, audioFeatures, {
+    hasAudioFeatures,
+    avgPopularity,
+    explicit,
+    totalDuration,
+    artistDiversity: Object.keys(artistCounts).length
+  });
+
+  console.log('🧠 Psychology profile generated:', psychologyProfile ? 'SUCCESS' : 'FAILED');
+  if (psychologyProfile) {
+    console.log('🧠 Personality scores:', psychologyProfile.scores);
+  }
 
   return {
     playlist: {
@@ -177,6 +210,7 @@ function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudioFeatu
     },
     audioFeatures: audioAnalysis,
     tasteProfile,
+    psychologyProfile, // Added psychology profile
     popularity: {
       average: Math.round(avgPopularity),
       distribution: categorizePopularity(popularityValues)
@@ -187,12 +221,19 @@ function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudioFeatu
       explicitTracks: explicit,
       explicitPercentage: Math.round((explicit / tracks.length) * 100),
       averageTrackLength: Math.round(totalDuration / tracks.length),
-      hasAudioFeatures
+      hasAudioFeatures,
+      artistCount: Object.keys(artistCounts).length,
+      popularityRange: {
+        min: Math.min(...popularityValues),
+        max: Math.max(...popularityValues),
+        average: Math.round(avgPopularity)
+      }
     },
     analysis: {
       timestamp: new Date().toISOString(),
       trackCount: tracks.length,
-      analysisType: hasAudioFeatures ? 'Full Analysis' : 'Metadata Analysis'
+      analysisType: hasAudioFeatures ? 'Full Analysis' : 'Metadata Analysis',
+      featuresAnalyzed: hasAudioFeatures ? audioFeatures.length : 0
     }
   };
 }

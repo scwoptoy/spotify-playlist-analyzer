@@ -139,6 +139,78 @@ function PlaylistAnalysis({ playlistId, playlistName, onBack }) {
           </div>
         </div>
       </div>
+	  
+	  {/* Psychological Profile */}
+      {analysis.psychologyProfile && (
+  <div style={{ marginBottom: '30px' }}>
+    <h2>🧠 Psychological Profile</h2>
+    <div style={{
+      backgroundColor: '#f0f8ff',
+      padding: '25px',
+      borderRadius: '10px',
+      marginBottom: '20px',
+      border: '2px solid #4a90e2'
+    }}>
+      <h3 style={{ marginTop: '0', color: '#4a90e2' }}>
+        {analysis.psychologyProfile.summary}
+      </h3>
+      
+      {/* Big Five Scores */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+        {Object.entries(analysis.psychologyProfile.scores).map(([trait, score]) => (
+          <div key={trait} style={{
+            backgroundColor: 'white',
+            padding: '15px',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          }}>
+            <h4 style={{ marginTop: '0', textTransform: 'capitalize' }}>{trait}</h4>
+            <div style={{
+              width: '100%',
+              height: '8px',
+              backgroundColor: '#e0e0e0',
+              borderRadius: '4px',
+              marginBottom: '8px'
+            }}>
+              <div style={{
+                width: `${Math.round(score * 100)}%`,
+                height: '100%',
+                backgroundColor: '#4a90e2',
+                borderRadius: '4px'
+              }}></div>
+            </div>
+            <p style={{ margin: '0', fontSize: '14px', fontWeight: 'bold' }}>
+              {Math.round(score * 100)}%
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Detailed Insights */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+        {Object.entries(analysis.psychologyProfile.insights).map(([trait, insights]) => 
+          insights.length > 0 && (
+            <div key={trait} style={{
+              backgroundColor: 'white',
+              padding: '15px',
+              borderRadius: '8px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}>
+              <h5 style={{ margin: '0 0 10px 0', color: '#4a90e2', textTransform: 'capitalize' }}>
+                {trait} Insights:
+              </h5>
+              {insights.map((insight, index) => (
+                <p key={index} style={{ margin: '5px 0', fontSize: '14px' }}>
+                  • {insight}
+                </p>
+              ))}
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Audio Features or Alternative Analysis */}
       {analysis.metadata?.hasAudioFeatures && audioFeatures && audioFeatures.averages ? (
