@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import PlaylistAnalysis from './PlaylistAnalysis';
+
 
 function PlaylistList() {
   const [playlists, setPlaylists] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedPlaylist, setSelectedPlaylist] = useState(null);
 
   useEffect(() => {
     fetchUserData();
@@ -46,9 +49,11 @@ function PlaylistList() {
     }
   };
 
-  const handleAnalyzePlaylist = (playlistId, playlistName) => {
-    alert(`Coming soon: Analyze "${playlistName}" (ID: ${playlistId})`);
-  };
+
+const handleAnalyzePlaylist = (playlistId, playlistName) => {
+  setSelectedPlaylist({ id: playlistId, name: playlistName });
+};
+
 
   if (loading) {
     return (
@@ -70,6 +75,16 @@ function PlaylistList() {
           Login Again
         </button>
       </div>
+    );
+  }
+
+  if (selectedPlaylist) {
+    return (
+      <PlaylistAnalysis 
+        playlistId={selectedPlaylist.id}
+        playlistName={selectedPlaylist.name}
+        onBack={() => setSelectedPlaylist(null)}
+      />
     );
   }
 
