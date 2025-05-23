@@ -20,7 +20,7 @@ function generateRandomString(length) {
 // Login route - redirects to Spotify
 router.get('/login', (req, res) => {
   const state = generateRandomString(16);
-  const scope = 'user-read-private user-read-email playlist-read-private playlist-read-collaborative';
+  const scope = 'user-read-private user-read-email playlist-read-private playlist-read-collaborative user-library-read user-top-read user-read-recently-played streaming';
 
   const authURL = 'https://accounts.spotify.com/authorize?' +
     new URLSearchParams({
