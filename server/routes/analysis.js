@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const { analyzeBigFivePersonality } = require('./psychology');
+const { MusicPsychologyNarrator } = require('../llmNarrative');
 const router = express.Router();
 
 // Analyze a specific playlist
@@ -84,7 +85,7 @@ router.get('/playlist/:playlistId', async (req, res) => {
 
     // Step 4: Analyze with available data
     console.log(`🔬 Starting comprehensive analysis...`);
-    const analysis = analyzePlaylistData(allTracks, playlist, audioFeatures, hasAudioFeatures);
+    const analysis = await analyzePlaylistData(allTracks, playlist, audioFeatures, hasAudioFeatures);
 
     console.log(`✅ Analysis complete for "${playlist.name}"`);
     res.json(analysis);
@@ -104,7 +105,7 @@ router.get('/playlist/:playlistId', async (req, res) => {
 });
 
 // Enhanced analysis function that works with or without audio features
-function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudioFeatures = false) {
+async function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudioFeatures = false) {
   if (tracks.length === 0) {
     return {
       playlist: {
@@ -200,6 +201,46 @@ function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudioFeatu
     console.log('🧠 Personality scores:', psychologyProfile.scores);
   }
 
+  // Generate advanced narrative
+  console.log(`🤖 Generating advanced psychological narrative...`);
+  let advancedNarrative = null;
+  
+  try {
+    const narrator = new MusicPsychologyNarrator();
+    advancedNarrative = await narrator.generateAdvancedNarrative({
+      playlist: {
+        id: playlist.id,
+        name: playlist.name,
+        trackCount: tracks.length,
+        totalDuration
+      },
+      psychologyProfile,
+      topArtists,
+      popularity: { average: Math.round(avgPopularity) },
+      decades,
+      metadata: {
+        explicitPercentage: Math.round((explicit / tracks.length) * 100),
+        artistCount: Object.keys(artistCounts).length,
+        hasAudioFeatures,
+        averageTrackLength: Math.round(totalDuration / tracks.length),
+        popularityRange: {
+          average: Math.round(avgPopularity)
+        }
+      },
+      tasteProfile
+    });
+
+    console.log('🤖 Advanced narrative generated:', advancedNarrative ? 'SUCCESS' : 'FAILED');
+  } catch (narrativeError) {
+    console.log('⚠️ Narrative generation failed:', narrativeError.message);
+    advancedNarrative = {
+      advanced_narrative: "Advanced narrative generation temporarily unavailable. Psychology profile analysis available above.",
+      narrative_type: 'Error_Fallback',
+      confidence_score: 0.5,
+      generated_at: new Date().toISOString()
+    };
+  }
+
   return {
     playlist: {
       id: playlist.id,
@@ -210,7 +251,8 @@ function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudioFeatu
     },
     audioFeatures: audioAnalysis,
     tasteProfile,
-    psychologyProfile, // Added psychology profile
+    psychologyProfile,
+    advancedNarrative, // Added advanced narrative
     popularity: {
       average: Math.round(avgPopularity),
       distribution: categorizePopularity(popularityValues)

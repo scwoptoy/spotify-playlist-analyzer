@@ -186,6 +186,88 @@ function PlaylistAnalysis({ playlistId, playlistName, onBack }) {
         ))}
       </div>
 
+{/* Advanced AI Narrative */}
+{analysis.advancedNarrative && (
+  <div style={{ marginBottom: '30px' }}>
+    <h2>🤖 Advanced Psychological Analysis</h2>
+    <div style={{
+      backgroundColor: '#f0f4f8',
+      padding: '30px',
+      borderRadius: '12px',
+      marginBottom: '20px',
+      border: '2px solid #667eea',
+      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px'
+      }}>
+        <h3 style={{ margin: '0', color: '#667eea' }}>
+          AI-Generated Musical Psychology Profile
+        </h3>
+        <span style={{
+          backgroundColor: '#667eea',
+          color: 'white',
+          padding: '4px 12px',
+          borderRadius: '20px',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }}>
+          {analysis.advancedNarrative.narrative_type === 'LLM_Generated' ? 'AI-Powered' : 'Advanced Analysis'}
+        </span>
+      </div>
+      
+      <div style={{
+        backgroundColor: 'white',
+        padding: '25px',
+        borderRadius: '8px',
+        lineHeight: '1.7',
+        fontSize: '16px',
+        color: '#2d3748'
+      }}>
+        {analysis.advancedNarrative.advanced_narrative.split('\n\n').map((paragraph, index) => (
+          <p key={index} style={{ marginBottom: '20px', margin: index === 0 ? '0 0 20px 0' : '20px 0' }}>
+            {paragraph}
+          </p>
+        ))}
+      </div>
+
+      {/* Key Insights */}
+      {analysis.advancedNarrative.key_insights && (
+        <div style={{ marginTop: '20px' }}>
+          <h4 style={{ color: '#667eea', marginBottom: '15px' }}>Key Insights:</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '10px' }}>
+            {analysis.advancedNarrative.key_insights.map((insight, index) => (
+              <div key={index} style={{
+                backgroundColor: 'white',
+                padding: '12px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '14px'
+              }}>
+                💡 {insight}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Confidence Score */}
+      <div style={{ 
+        marginTop: '20px', 
+        textAlign: 'center',
+        fontSize: '14px',
+        color: '#718096'
+      }}>
+        Analysis Confidence: {Math.round((analysis.advancedNarrative.confidence_score || 0.5) * 100)}% • 
+        Generated: {new Date(analysis.advancedNarrative.generated_at).toLocaleString()}
+      </div>
+    </div>
+  </div>
+)}
+
       {/* Detailed Insights */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
         {Object.entries(analysis.psychologyProfile.insights).map(([trait, insights]) => 
