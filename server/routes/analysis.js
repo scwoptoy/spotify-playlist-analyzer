@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const { analyzeBigFivePersonality } = require('./psychology');
 const { MusicPsychologyNarrator } = require('../llmNarrative');
+const { TemporalFlowAnalyzer } = require('../temporalFlow');
 const router = express.Router();
 
 // Analyze a specific playlist
@@ -201,6 +202,21 @@ async function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudi
     console.log('🧠 Personality scores:', psychologyProfile.scores);
   }
 
+  console.log(`🎼 Starting temporal flow analysis...`);
+  let temporalFlowAnalysis = null;
+
+  try {
+    const flowAnalyzer = new TemporalFlowAnalyzer();
+    temporalFlowAnalysis = flowAnalyzer.analyzePlaylistFlow(tracks, audioFeatures);
+    console.log('🎼 Temporal flow analysis generated:', temporalFlowAnalysis ? 'SUCCESS' : 'FAILED');
+  } catch (flowError) {
+    console.log('⚠️ Temporal flow analysis failed:', flowError.message);
+    temporalFlowAnalysis = {
+      flow_analysis: { flow_available: false },
+      insights: { flow_insights: ['Temporal flow analysis temporarily unavailable'] }
+    };
+  }
+
   // Generate advanced narrative
   console.log(`🤖 Generating advanced psychological narrative...`);
   let advancedNarrative = null;
@@ -252,7 +268,8 @@ async function analyzePlaylistData(tracks, playlist, audioFeatures = [], hasAudi
     audioFeatures: audioAnalysis,
     tasteProfile,
     psychologyProfile,
-    advancedNarrative, // Added advanced narrative
+    advancedNarrative,
+    temporalFlowAnalysis,
     popularity: {
       average: Math.round(avgPopularity),
       distribution: categorizePopularity(popularityValues)

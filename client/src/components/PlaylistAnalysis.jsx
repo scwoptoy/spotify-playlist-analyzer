@@ -89,6 +89,13 @@ function PlaylistAnalysis({ playlistId, playlistName, onBack }) {
   }
 
   console.log('🎨 Rendering analysis for:', analysis.playlist?.name);
+//DEBUG LINE
+console.log('🎨 Rendering analysis for:', analysis.playlist?.name);
+console.log('🔍 Temporal flow debug:', {
+  hasTemporalFlow: !!analysis.temporalFlowAnalysis,
+  flowAvailable: analysis.temporalFlowAnalysis?.flow_analysis?.flow_available,
+  fullFlowData: analysis.temporalFlowAnalysis
+}); // <-- ADD THIS DEBUG LINE
 
   const { playlist, audioFeatures, tasteProfile, popularity, decades } = analysis;
 
@@ -484,6 +491,188 @@ function PlaylistAnalysis({ playlistId, playlistName, onBack }) {
           </div>
         </div>
       </div>
+  
+{analysis.temporalFlowAnalysis && analysis.temporalFlowAnalysis.flow_analysis.flow_available !== false && (
+  <div style={{ marginBottom: '30px' }}>
+    <h2>🎼 Musical Journey Analysis</h2>
+    <div style={{
+      backgroundColor: '#f8f4f0',
+      padding: '30px',
+      borderRadius: '12px',
+      marginBottom: '20px',
+      border: '2px solid #ff6b35',
+      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+    }}>
+      <h3 style={{ marginTop: '0', color: '#ff6b35' }}>
+        Your Playlist Flow & Pacing Strategy
+      </h3>
+
+      {/* Flow Quality Score */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        marginBottom: '25px',
+        padding: '20px',
+        backgroundColor: 'white',
+        borderRadius: '8px'
+      }}>
+        <div style={{ marginRight: '20px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            backgroundColor: analysis.temporalFlowAnalysis.insights?.flow_quality_score > 0.7 ? '#4CAF50' : 
+                           analysis.temporalFlowAnalysis.insights?.flow_quality_score > 0.4 ? '#FF9800' : '#F44336',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '20px',
+            fontWeight: 'bold'
+          }}>
+            {Math.round((analysis.temporalFlowAnalysis.insights?.flow_quality_score || 0.5) * 100)}%
+          </div>
+        </div>
+        <div>
+          <h4 style={{ margin: '0', color: '#ff6b35' }}>Flow Quality Score</h4>
+          <p style={{ margin: '5px 0 0 0', color: '#666' }}>
+            Measures how well your tracks flow together as an intentional journey
+          </p>
+        </div>
+      </div>
+
+      {/* Energy Flow Visualization */}
+      {analysis.temporalFlowAnalysis.visualization_data && (
+        <div style={{ marginBottom: '25px' }}>
+          <h4 style={{ color: '#ff6b35', marginBottom: '15px' }}>Energy Flow Curve</h4>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            position: 'relative',
+            height: '120px'
+          }}>
+            <svg width="100%" height="100%" style={{ overflow: 'visible' }}>
+              {/* Draw energy curve */}
+              {analysis.temporalFlowAnalysis.visualization_data.energy_points && 
+               analysis.temporalFlowAnalysis.visualization_data.energy_points.length > 1 && (
+                <polyline
+                  points={analysis.temporalFlowAnalysis.visualization_data.energy_points
+                    .map((point, index) => 
+                      `${(index / (analysis.temporalFlowAnalysis.visualization_data.energy_points.length - 1)) * 100}%,${100 - point.value * 80}%`
+                    ).join(' ')}
+                  fill="none"
+                  stroke="#ff6b35"
+                  strokeWidth="3"
+                  style={{ vectorEffect: 'non-scaling-stroke' }}
+                />
+              )}
+              
+              {/* Add axis labels */}
+              <text x="0%" y="95%" fontSize="12" fill="#666">Start</text>
+              <text x="95%" y="95%" fontSize="12" fill="#666" textAnchor="end">End</text>
+              <text x="0%" y="15%" fontSize="12" fill="#666">High Energy</text>
+              <text x="0%" y="85%" fontSize="12" fill="#666">Low Energy</text>
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* Flow Insights */}
+      {analysis.temporalFlowAnalysis.insights?.flow_insights && (
+        <div style={{ marginBottom: '25px' }}>
+          <h4 style={{ color: '#ff6b35', marginBottom: '15px' }}>Flow Insights</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+            {analysis.temporalFlowAnalysis.insights.flow_insights.map((insight, index) => (
+              <div key={index} style={{
+                backgroundColor: 'white',
+                padding: '20px',
+                borderRadius: '8px',
+                borderLeft: '4px solid #ff6b35'
+              }}>
+                <p style={{ margin: '0', fontSize: '16px', lineHeight: '1.5' }}>
+                  🎯 {insight}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* DJ Skill Analysis */}
+      {analysis.temporalFlowAnalysis.insights?.dj_skill_analysis && (
+        <div style={{ marginBottom: '20px' }}>
+          <h4 style={{ color: '#ff6b35', marginBottom: '15px' }}>Curation Skills Analysis</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '15px',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              <h5 style={{ margin: '0 0 8px 0', color: '#ff6b35' }}>Transition Mastery</h5>
+              <p style={{ 
+                margin: '0', 
+                fontSize: '18px', 
+                fontWeight: 'bold',
+                textTransform: 'capitalize'
+              }}>
+                {analysis.temporalFlowAnalysis.insights.dj_skill_analysis.transition_mastery}
+              </p>
+            </div>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '15px',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              <h5 style={{ margin: '0 0 8px 0', color: '#ff6b35' }}>Pacing Style</h5>
+              <p style={{ 
+                margin: '0', 
+                fontSize: '18px', 
+                fontWeight: 'bold',
+                textTransform: 'capitalize'
+              }}>
+                {analysis.temporalFlowAnalysis.insights.dj_skill_analysis.pacing_sophistication}
+              </p>
+            </div>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '15px',
+              borderRadius: '8px',
+              textAlign: 'center'
+            }}>
+              <h5 style={{ margin: '0 0 8px 0', color: '#ff6b35' }}>Overall Skill</h5>
+              <p style={{ 
+                margin: '0', 
+                fontSize: '18px', 
+                fontWeight: 'bold',
+                textTransform: 'capitalize'
+              }}>
+                {analysis.temporalFlowAnalysis.insights.dj_skill_analysis.overall_skill}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Narrative Structure */}
+      {analysis.temporalFlowAnalysis.insights?.narrative_structure && (
+        <div style={{
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0'
+        }}>
+          <h5 style={{ margin: '0 0 10px 0', color: '#ff6b35' }}>Playlist Structure</h5>
+          <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
+            📖 Your playlist follows a <strong>{analysis.temporalFlowAnalysis.insights.narrative_structure}</strong> structure
+          </p>
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
       {/* Era Distribution */}
       {Object.keys(decades).length > 0 && (
